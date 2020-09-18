@@ -7,15 +7,17 @@ dur=10
 reqs=(1)
 resps=(1)
 rpc_types=(unary)
+addr="localhost"
 
 # idx[0] = idx value for rpcs
 # idx[1] = idx value for conns
 # idx[2] = idx value for reqs
 # idx[3] = idx value for resps
 # idx[4] = idx value for rpc_types
-idx=(0 0 0 0 0)
-idx_max=(1 1 1 1 1)
-
+# idx[5] = idx value for what node to start the server on
+idx=(0 0 0 0 0 0)
+idx_max=(1 1 1 1 1 1)
+what
 inc()
 {
   for i in $(seq $((${#idx[@]}-1)) -1 0); do
@@ -65,11 +67,11 @@ run(){
     port=$((${base_port}+${delta}))
 
     # Launch the server in background
-    ${out_dir}/server --port=${port} --test_name="Server_"${test_name}&
-    server_pid=$(echo $!)
+    # ${out_dir}/server --port=${port} --test_name="Server_"${test_name}&
+    # server_pid=$(echo $!)
 
     # Launch the client
-    ${out_dir}/client --port=${port} --d=${dur} --w=${warmup} --r=${nr} --c=${nc} --req=${req_sz} --resp=${resp_sz} --rpc_type=${r_type}  --test_name="client_"${test_name}
+    ${out_dir}/client --addr=${addr} --port=${port} --d=${dur} --w=${warmup} --r=${nr} --c=${nc} --req=${req_sz} --resp=${resp_sz} --rpc_type=${r_type}  --test_name="client_"${test_name}
     client_status=$(echo $?)
 
     kill -INT ${server_pid}
@@ -107,6 +109,7 @@ set_param(){
 
 while [ $# -gt 0 ]; do
   case "$1" in
+
     -r)
       shift
       set_param "number of rpcs" 0 $1
@@ -149,6 +152,12 @@ while [ $# -gt 0 ]; do
       rpc_types=(${PARAM[@]})
       shift
       ;;
+    -addr)
+      shift
+      set_param "addr of server node" 5 $1
+      addr=(${PARAM[@]})
+      shift
+      ;;
     -h|--help)
       echo "Following are valid options:"
       echo
@@ -163,6 +172,7 @@ while [ $# -gt 0 ]; do
       echo "-req              req size in bytes, default value is 1"
       echo "-resp             resp size in bytes, default value is 1"
       echo "-rpc_type         valid values are unary|streaming, default is unary"
+      echo "-addr             addr of server node, default is localhost"
       exit 0
       ;;
     *)
