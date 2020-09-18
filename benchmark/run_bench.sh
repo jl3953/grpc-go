@@ -17,7 +17,6 @@ addr="localhost"
 # idx[5] = idx value for what node to start the server on
 idx=(0 0 0 0 0 0)
 idx_max=(1 1 1 1 1 1)
-what
 inc()
 {
   for i in $(seq $((${#idx[@]}-1)) -1 0); do
@@ -74,8 +73,8 @@ run(){
     ${out_dir}/client --addr=${addr} --port=${port} --d=${dur} --w=${warmup} --r=${nr} --c=${nc} --req=${req_sz} --resp=${resp_sz} --rpc_type=${r_type}  --test_name="client_"${test_name}
     client_status=$(echo $?)
 
-    kill -INT ${server_pid}
-    wait ${server_pid}
+    # kill -INT ${server_pid}
+    # wait ${server_pid}
 
     if [ ${client_status} == 0 ]; then
       break
@@ -185,7 +184,10 @@ done
 # Build server and client
 out_dir=$(mktemp -d oss_benchXXX)
 
-go build -o ${out_dir}/server $GOPATH/src/google.golang.org/grpc/benchmark/server/main.go && go build -o ${out_dir}/client $GOPATH/src/google.golang.org/grpc/benchmark/client/main.go
+# go build -o ${out_dir}/server $GOPATH/src/google.golang.org/grpc/benchmark/server/main.go &&
+# go build -o ${out_dir}/client $GOPATH/src/google.golang.org/grpc/benchmark/client/main.go
+# go build -o ${out_dir}/server /usr/local/grpc-go/benchmark/server/main.go
+go build -o ${out_dir}/client /usr/local/grpc-go/benchmark/client/main.go
 if [ $? != 0 ]; then
   clean_and_die 1
 fi
