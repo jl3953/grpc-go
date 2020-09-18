@@ -50,8 +50,9 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/benchmark"
-	testpb "google.golang.org/grpc/benchmark/grpc_testing"
+	//testpb "google.golang.org/grpc/benchmark/grpc_testing"
 	"google.golang.org/grpc/benchmark/stats"
+	pb "google.golang.org/grpc/examples/helloworld/helloworld"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/internal/syscall"
 )
@@ -86,14 +87,16 @@ func main() {
 	if *testName == "" {
 		logger.Fatalf("test_name not set")
 	}
-	req := &testpb.SimpleRequest{
+	/**req := &testpb.SimpleRequest{
 		ResponseType: testpb.PayloadType_COMPRESSABLE,
 		ResponseSize: int32(*rspSize),
 		Payload: &testpb.Payload{
 			Type: testpb.PayloadType_COMPRESSABLE,
 			Body: make([]byte, *rqSize),
 		},
-	}
+	}*/
+
+	req := &pb.HelloRequest{Name: "hello"}
 	connectCtx, connectCancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
 	defer connectCancel()
 	ccs := buildConnections(connectCtx)
@@ -139,7 +142,8 @@ func buildConnections(ctx context.Context) []*grpc.ClientConn {
 	return ccs
 }
 
-func runWithConn(cc *grpc.ClientConn, req *testpb.SimpleRequest, warmDeadline, endDeadline time.Time) {
+//func runWithConn(cc *grpc.ClientConn, req *testpb.SimpleRequest, warmDeadline, endDeadline time.Time) {
+func runWithConn(cc *grpc.ClientConn, req *pb.HelloRequest, warmDeadline, endDeadline time.Time) {
 	for i := 0; i < *numRPC; i++ {
 		wg.Add(1)
 		go func() {
@@ -164,27 +168,33 @@ func runWithConn(cc *grpc.ClientConn, req *testpb.SimpleRequest, warmDeadline, e
 	}
 }
 
-func makeCaller(cc *grpc.ClientConn, req *testpb.SimpleRequest) func() {
-	client := testpb.NewBenchmarkServiceClient(cc)
+// func makeCaller(cc *grpc.ClientConn, req *testpb.SimpleRequest) func() {
+func makeCaller(cc *grpc.ClientConn, req *pb.HelloRequest) func() {
+	// client := testpb.NewBenchmarkServiceClient(cc)
+	client := pb.NewGreeterClient(cc)
 	if *rpcType == "unary" {
 		return func() {
-			if _, err := client.UnaryCall(context.Background(), req); err != nil {
+			//if _, err := client.UnaryCall(context.Background(), req); err != nil {
+			if _, err := client.SayHello(context.Background(), req); err != nil {
 				logger.Fatalf("RPC failed: %v", err)
 			}
 		}
 	}
-	stream, err := client.StreamingCall(context.Background())
-	if err != nil {
-		logger.Fatalf("RPC failed: %v", err)
-	}
-	return func() {
-		if err := stream.Send(req); err != nil {
-			logger.Fatalf("Streaming RPC failed to send: %v", err)
+
+	/*
+		stream, err := client.StreamingCall(context.Background())
+		if err != nil {
+			logger.Fatalf("RPC failed: %v", err)
 		}
-		if _, err := stream.Recv(); err != nil {
-			logger.Fatalf("Streaming RPC failed to read: %v", err)
-		}
-	}
+		return func() {
+			if err := stream.Send(req); err != nil {
+				logger.Fatalf("Streaming RPC failed to send: %v", err)
+			}
+			if _, err := stream.Recv(); err != nil {
+				logger.Fatalf("Streaming RPC failed to read: %v", err)
+			}
+		}*/
+	return nil
 }
 
 func parseHist(hist *stats.Histogram) {
