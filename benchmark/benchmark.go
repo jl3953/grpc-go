@@ -301,6 +301,7 @@ func NewClientConn(addr string, opts ...grpc.DialOption) *grpc.ClientConn {
 func NewClientConnWithContext(ctx context.Context, addr string, opts ...grpc.DialOption) *grpc.ClientConn {
 	opts = append(opts, grpc.WithWriteBufferSize(128*1024))
 	opts = append(opts, grpc.WithReadBufferSize(128*1024))
+	logger.Warningf("addr %+v", addr)
 	conn, err := grpc.DialContext(ctx, addr, opts...)
 	if err != nil {
 		logger.Fatalf("NewClientConn(%q) failed to create a ClientConn %v", addr, err)
