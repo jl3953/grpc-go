@@ -190,7 +190,7 @@ jenn_dir="/usr/local"
 # go build -o ${out_dir}/server $GOPATH/src/google.golang.org/grpc/benchmark/server/main.go &&
 # go build -o ${out_dir}/client $GOPATH/src/google.golang.org/grpc/benchmark/client/main.go
 # go build -o ${out_dir}/server /usr/local/grpc-go/benchmark/server/main.go
-go build -o ${out_dir}/client $jenn_dir/grpc-go/benchmark/client/main.go
+/usr/local/go/bin/go build -o ${out_dir}/client $jenn_dir/grpc-go/benchmark/client/main.go
 if [ $? != 0 ]; then
   clean_and_die 1
 fi
