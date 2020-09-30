@@ -52,7 +52,7 @@ import (
 	"google.golang.org/grpc/benchmark"
 	//testpb "google.golang.org/grpc/benchmark/grpc_testing"
 	"google.golang.org/grpc/benchmark/stats"
-	pb "google.golang.org/grpc/examples/helloworld/helloworld"
+	pb "google.golang.org/grpc/benchmark/helloworld"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/internal/syscall"
 )
@@ -87,16 +87,16 @@ func main() {
 	if *testName == "" {
 		logger.Fatalf("test_name not set")
 	}
-	/**req := &testpb.SimpleRequest{
-		ResponseType: testpb.PayloadType_COMPRESSABLE,
+	req := &pb.SimpleRequest{
+		ResponseType: pb.PayloadType_COMPRESSABLE,
 		ResponseSize: int32(*rspSize),
-		Payload: &testpb.Payload{
-			Type: testpb.PayloadType_COMPRESSABLE,
+		Payload: &pb.Payload{
+			Type: pb.PayloadType_COMPRESSABLE,
 			Body: make([]byte, *rqSize),
 		},
-	}*/
+	}
 
-	req := &pb.HelloRequest{Name: "hello"}
+	//req := &pb.HelloRequest{Name: "hello"}
 	connectCtx, connectCancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
 	defer connectCancel()
 	ccs := buildConnections(connectCtx)
@@ -143,7 +143,7 @@ func buildConnections(ctx context.Context) []*grpc.ClientConn {
 }
 
 //func runWithConn(cc *grpc.ClientConn, req *testpb.SimpleRequest, warmDeadline, endDeadline time.Time) {
-func runWithConn(cc *grpc.ClientConn, req *pb.HelloRequest, warmDeadline, endDeadline time.Time) {
+func runWithConn(cc *grpc.ClientConn, req *pb.SimpleRequest, warmDeadline, endDeadline time.Time) {
 	for i := 0; i < *numRPC; i++ {
 		wg.Add(1)
 		go func() {
@@ -169,14 +169,14 @@ func runWithConn(cc *grpc.ClientConn, req *pb.HelloRequest, warmDeadline, endDea
 }
 
 // func makeCaller(cc *grpc.ClientConn, req *testpb.SimpleRequest) func() {
-func makeCaller(cc *grpc.ClientConn, req *pb.HelloRequest) func() {
+func makeCaller(cc *grpc.ClientConn, req *pb.SimpleRequest) func() {
 	// client := testpb.NewBenchmarkServiceClient(cc)
-	client := pb.NewGreeterClient(cc)
+	var client = pb.NewGreeterClient(cc)
 	if *rpcType == "unary" {
 		return func() {
-			//if _, err := client.UnaryCall(context.Background(), req); err != nil {
-			if _, err := client.SayHello(context.Background(), req); err != nil {
-				logger.Fatalf("RPC failed: %v", err)
+			if _, err := client.UnaryCall(context.Background(), req); err != nil {
+			//if _, err := client.SayHello(context.Background(), req); err != nil {
+				logger.Fatalf("jenndebug RPC failed: %v", err)
 			}
 		}
 	}
