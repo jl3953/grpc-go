@@ -19,6 +19,9 @@ const _ = grpc.SupportPackageIsVersion7
 type GreeterClient interface {
 	// Sends a greeting
 	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
+	// One request followed by one response.
+	// The server returns the client payload as-is.
+	UnaryCall(ctx context.Context, in *SimpleRequest, opts ...grpc.CallOption) (*SimpleResponse, error)
 }
 
 type greeterClient struct {
@@ -42,6 +45,19 @@ func (c *greeterClient) SayHello(ctx context.Context, in *HelloRequest, opts ...
 	return out, nil
 }
 
+var greeterUnaryCallStreamDesc = &grpc.StreamDesc{
+	StreamName: "UnaryCall",
+}
+
+func (c *greeterClient) UnaryCall(ctx context.Context, in *SimpleRequest, opts ...grpc.CallOption) (*SimpleResponse, error) {
+	out := new(SimpleResponse)
+	err := c.cc.Invoke(ctx, "/helloworld.Greeter/UnaryCall", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GreeterService is the service API for Greeter service.
 // Fields should be assigned to their respective handler implementations only before
 // RegisterGreeterService is called.  Any unassigned fields will result in the
@@ -49,6 +65,9 @@ func (c *greeterClient) SayHello(ctx context.Context, in *HelloRequest, opts ...
 type GreeterService struct {
 	// Sends a greeting
 	SayHello func(context.Context, *HelloRequest) (*HelloReply, error)
+	// One request followed by one response.
+	// The server returns the client payload as-is.
+	UnaryCall func(context.Context, *SimpleRequest) (*SimpleResponse, error)
 }
 
 func (s *GreeterService) sayHello(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -68,6 +87,23 @@ func (s *GreeterService) sayHello(_ interface{}, ctx context.Context, dec func(i
 	}
 	return interceptor(ctx, in, info, handler)
 }
+func (s *GreeterService) unaryCall(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SimpleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.UnaryCall(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/helloworld.Greeter/UnaryCall",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.UnaryCall(ctx, req.(*SimpleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
 
 // RegisterGreeterService registers a service implementation with a gRPC server.
 func RegisterGreeterService(s grpc.ServiceRegistrar, srv *GreeterService) {
@@ -77,6 +113,11 @@ func RegisterGreeterService(s grpc.ServiceRegistrar, srv *GreeterService) {
 			return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
 		}
 	}
+	if srvCopy.UnaryCall == nil {
+		srvCopy.UnaryCall = func(context.Context, *SimpleRequest) (*SimpleResponse, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method UnaryCall not implemented")
+		}
+	}
 	sd := grpc.ServiceDesc{
 		ServiceName: "helloworld.Greeter",
 		Methods: []grpc.MethodDesc{
@@ -84,9 +125,13 @@ func RegisterGreeterService(s grpc.ServiceRegistrar, srv *GreeterService) {
 				MethodName: "SayHello",
 				Handler:    srvCopy.sayHello,
 			},
+			{
+				MethodName: "UnaryCall",
+				Handler:    srvCopy.unaryCall,
+			},
 		},
 		Streams:  []grpc.StreamDesc{},
-		Metadata: "examples/helloworld/helloworld/helloworld.proto",
+		Metadata: "helloworld/helloworld.proto",
 	}
 
 	s.RegisterService(&sd, nil)
