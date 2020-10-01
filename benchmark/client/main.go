@@ -57,6 +57,7 @@ import (
 )
 
 var (
+	addr	  = flag.String("addr", "localhost", "address of server node.")
 	port      = flag.String("port", "50051", "Localhost port to connect to.")
 	numRPC    = flag.Int("r", 1, "The number of concurrent RPCs on each connection.")
 	numConn   = flag.Int("c", 1, "The number of parallel connections.")
@@ -131,7 +132,7 @@ func main() {
 func buildConnections(ctx context.Context) []*grpc.ClientConn {
 	ccs := make([]*grpc.ClientConn, *numConn)
 	for i := range ccs {
-		ccs[i] = benchmark.NewClientConnWithContext(ctx, "localhost:"+*port, grpc.WithInsecure(), grpc.WithBlock())
+		ccs[i] = benchmark.NewClientConnWithContext(ctx, *addr+":"+*port, grpc.WithInsecure(), grpc.WithBlock())
 	}
 	return ccs
 }
