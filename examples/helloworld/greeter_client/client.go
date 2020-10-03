@@ -194,9 +194,9 @@ func makeCaller(cc *grpc.ClientConn, req *testpb.HelloRequest) func() {
 
 func parseHist(hist *stats.Histogram) {
 	fmt.Println("qps:", float64(hist.Count)/float64(*duration))
-	fmt.Printf("Latency: (50/90/99 %%ile): %v/%v/%v\n",
+	fmt.Printf("Latency: (50/95/99 %%ile): %v/%v/%v\n",
 		time.Duration(median(.5, hist)),
-		time.Duration(median(.9, hist)),
+		time.Duration(median(.95, hist)),
 		time.Duration(median(.99, hist)))
 }
 
