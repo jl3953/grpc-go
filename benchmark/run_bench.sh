@@ -184,8 +184,8 @@ done
 # Build server and client
 out_dir=$(mktemp -d oss_benchXXX)
 
-jenn_dir=/home/jennifer
-# jenn_dir=/usr/local
+# jenn_dir=/home/jennifer
+jenn_dir=/root
 
 # go build -o ${out_dir}/server $GOPATH/src/google.golang.org/grpc/benchmark/server/main.go
 go build -o ${out_dir}/client $jenn_dir/grpc-go/benchmark/client/main.go
